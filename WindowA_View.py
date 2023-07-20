@@ -12,6 +12,6 @@ class View:
         botton_frame.pack(side=tk.RIGHT, anchor=tk.NE)
 
     def on_button_click():
-        print("ボタンがクリックされました")
+        print("windowBに遷移")
                                   
     

@@ -7,9 +7,9 @@ class App:
         self.window.title("My単語帳（仮）")
         self.window.geometry("300x300")
 
-        
-
         View(self.window)
+        # Model
+        # Controller
 
     def run(self):
         self.window.mainloop()
