@@ -15,14 +15,13 @@ class Model:
                 name TEXT
             )
         ''')
-
+        # 自信有無は追加必要
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS words (
                 id INTEGER PRIMARY KEY,
                 genre_id INTEGER,
                 word TEXT,
                 details TEXT,
-                confidence BOOLEAN,
                 FOREIGN KEY(genre_id) REFERENCES genres(id)
             )
         ''')
@@ -35,6 +34,16 @@ class Model:
     def get_genres(self):
         self.cursor.execute('''SELECT * FROM genres''')
         return self.cursor.fetchall()
+
+    def add_word(self, genre_id: int, word: str, details: str):
+        self.cursor.execute('''INSERT INTO words (genre_id, word, details) VALUES (?, ?, ?)''', (genre_id, word, details))
+        self.connection.commit()
+
+    def get_words(self, genre_id: int):
+        self.cursor.execute('''SELECT * FROM words WHERE genre_id = ?''', (genre_id,))
+        return self.cursor.fetchall()
+
+
 
 class FrameSwitcher:
     def __init__(self, parent, model: Model, *args):
@@ -107,8 +116,6 @@ class AddGenreFrame(tk.Frame):
         switcher.switchTo(StartFrame)
 
 
-
-
 class WordListFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model, genre: list):
         super().__init__(switcher.parent)
@@ -116,7 +123,7 @@ class WordListFrame(tk.Frame):
         self.model = model
         self.switcher = switcher
 
-        tk.Label(self, text="選んだジャンル名").pack()
+        tk.Label(self, text=genre[1]).pack()
 
         self.plus_button = tk.Button(self, text="＋", command=self.on_plus_button_click)
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
@@ -173,12 +180,12 @@ class AddWordFrame(tk.Frame):
         self.center_frame.place(relx=0.5, rely=0.5, anchor='center')
 
         tk.Label(self.center_frame, text="単語名").grid(row=0, column=0, columnspan=2, pady=5)
-        self.genre_name_entry = tk.Entry(self.center_frame)
-        self.genre_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
+        self.word_name_entry = tk.Entry(self.center_frame)
+        self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
         tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.genre_name_entry = tk.Entry(self.center_frame)
-        self.genre_name_entry.grid(row=3, column=0, columnspan=2, pady=5)
+        self.word_detail_entry = tk.Entry(self.center_frame)
+        self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
         self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_button_click)
         self.add_button.grid(row=4, column=1, pady=5)
@@ -192,12 +199,15 @@ class AddWordFrame(tk.Frame):
         print("キャンセルbutton clicked!")
         switcher.switchTo(WordListFrame, self.genre)
 
-
     def on_add_button_click(self):
         print("完了button clicked!")
+        word_name = self.word_name_entry.get()
+        word_detail = self.word_detail_entry.get()
+        self.model.add_word(self.genre[0], word_name, word_detail)
         switcher.switchTo(WordListFrame, self.genre)
         # データベースに関する処理
-    pass
+
+
 
 
 window = tk.Tk()
