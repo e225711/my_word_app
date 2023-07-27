@@ -236,14 +236,25 @@ class WordDetailFrame(tk.Frame):
         self.genre = genre
         self.word = word
 
-        tk.Label(self,text=word[2]).pack()
-        tk.Label(self,text="詳細").pack()
-        tk.Label(self,text=word[3]).pack()
+        word_name = tk.Label(self,text=word[2],font=("Helvetica",25))
+        word_name.place(relx=0.5, rely=0.2, anchor='center')
 
-        tk.Button(self, text="単語一覧へ",command=self.on_wordlist_back_button_click).pack()
-        tk.Button(self, text="編集", command=self.on_edit_button_click).pack()
-        tk.Button(self, text="次へ", command=lambda g = genre, w=word: self.on_next_button_click(g, w)).pack(expand=True)
-        tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w)).pack(expand=True)
+        tk.Label(self,text="詳細").pack()
+
+        word_detail = tk.Label(self,text=word[3],font=("Helvetica",20))
+        word_detail.place(relx=0.5, rely=0.5, anchor='center')
+
+        self.back_button = tk.Button(self, text="単語一覧へ",command=self.on_wordlist_back_button_click)
+        self.back_button.place(relx=1.0, rely=0.0, anchor='ne')
+
+        self.edit_button = tk.Button(self, text="編集", command=self.on_edit_button_click)
+        self.edit_button.place(relx=0.0, rely=0.0, anchor='nw')
+
+        self.next_word = tk.Button(self, text="次へ", command=lambda g = genre, w=word: self.on_next_button_click(g, w))
+        self.next_word.place(relx=1.0, rely=1.0, anchor='se')
+
+        self.before_word  = tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w))
+        self.before_word.place(relx=0.9, rely=1.0, anchor='se')
 
     
     def on_wordlist_back_button_click(self):
@@ -257,27 +268,25 @@ class WordDetailFrame(tk.Frame):
     def on_next_button_click(self,genre:list,word:list):
         print("次へbutton clicked!")
         search_word_list=model.get_words(genre[0])
-        i=0
-        while(search_word_list[i][0]!=word[0]):
-            i+=1
-
-        #print(search_word_list[i+1][2])
-
-        switcher.switchTo(WordDetailFrame, genre, search_word_list[i+1])
-
-        
+        word_index = search_word_list.index(word)
+        len_search_word_list = len(search_word_list)
+        if word_index + 1 == len_search_word_list:
+            word_index = 0
+            switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index])
+        else:
+            switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index+1])
 
 
     def on_before_button_click(self,genre:list,word:list):
-        print("次へbutton clicked!")
+        print("前へbutton clicked!")
         search_word_list=model.get_words(genre[0])
-        i=0
-        while(search_word_list[i][0]!=word[0]):
-            i+=1
-
-        #print(search_word_list[i+1][2])
-
-        switcher.switchTo(WordDetailFrame, genre, search_word_list[i-1])
+        word_index = search_word_list.index(word)
+        len_search_word_list = len(search_word_list)
+        if word_index == 0:
+            word_index = len_search_word_list - 1
+            switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index])
+        else:
+            switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index-1])
 
 
 class WordCheckFrame(tk.Frame):
@@ -325,11 +334,11 @@ class WordCheckAnswerFrame(tk.Frame):
         self.shuffle_list = shuffle_list
         self.count = count
 
-        self.plus_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
-        self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
+        self.back_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
+        self.back_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        self.plus_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
-        self.plus_button.place(relx=1.0, rely=1.0, anchor='se')
+        self.next_word_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
+        self.next_word_button.place(relx=1.0, rely=1.0, anchor='se')
 
         word_name = tk.Label(self,text=self.shuffle_list[self.count][1],font=("Helvetica",25))
         word_name.place(relx=0.5, rely=0.2, anchor='center')
