@@ -1,6 +1,7 @@
 import sqlite3
 import tkinter as tk
 from typing import Type
+import random
 
 class Model:
     def __init__(self, db_name: str):
@@ -43,6 +44,17 @@ class Model:
         self.cursor.execute('''SELECT * FROM words WHERE genre_id = ?''', (genre_id,))
         return self.cursor.fetchall()
 
+    def make_shuffle_list(self, genre_id: int):
+        self.cursor.execute('''SELECT * FROM words WHERE genre_id = ?''', (genre_id,))
+        return self.cursor.fetchall()
+
+    def make_shuffle_list(self, genre_id: int):
+        self.cursor.execute('''SELECT id, word FROM words WHERE genre_id = ?''', (genre_id,))
+        shuffle_list = self.cursor.fetchall()
+        random.shuffle(shuffle_list)
+        return shuffle_list
+
+
 
 
 class FrameSwitcher:
@@ -83,6 +95,8 @@ class StartFrame(tk.Frame):
     def on_genre_button_click(self, genre: list):
         print("ジャンルButton clicked!")
         switcher.switchTo(WordListFrame, genre)
+
+
 
 class AddGenreFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model):
@@ -146,6 +160,13 @@ class WordListFrame(tk.Frame):
 
         self.understand_check_button = tk.Button(self, text="理解度チェック", command=self.on_understand_check_button_click)
         self.understand_check_button.place(relx=0, rely=1, anchor='sw')
+
+        for word in model.get_words(genre[0]):
+            tk.Button(self, text=word[2], command=lambda w=word: self.on_word_button_click(w)).pack(expand=True)
+
+
+
+
         self.update()
 
     def on_plus_button_click(self):
@@ -167,6 +188,11 @@ class WordListFrame(tk.Frame):
 
     def on_understand_check_button_click(self):
         print("理解度チェックButton clicked!")
+        shuffle_list = self.model.make_shuffle_list(self.genre[0])
+        switcher.switchTo(WordCheckFrame, self.genre, shuffle_list, 0)
+
+    def on_word_button_click(self, word: list):
+        print("単語Button clicked!")
 
 
 class AddWordFrame(tk.Frame):
@@ -207,7 +233,62 @@ class AddWordFrame(tk.Frame):
         switcher.switchTo(WordListFrame, self.genre)
         # データベースに関する処理
 
+class WordCheckFrame(tk.Frame):
+    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, shuffle_list: list, count: int):
+        super().__init__(switcher.parent)
+        self.genre = genre
+        self.model = model
+        self.switcher = switcher
+        self.shuffle_list = shuffle_list
+        self.count = count
 
+        self.plus_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
+        self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
+
+        self.plus_button = tk.Button(self, text="解答へ", command=self.on_answer_button_click)
+        self.plus_button.place(relx=1.0, rely=1.0, anchor='se')
+
+        if self.count == len(self.shuffle_list):
+            self.count = 0
+            # 終了の表示
+        else:
+            tk.Label(self, text=self.shuffle_list[self.count][1]).pack()
+
+
+    def on_back_button_click(self):
+        print("単語一覧Button clicked!")
+        switcher.switchTo(WordListFrame, self.genre)
+
+    def on_answer_button_click(self):
+        print("答えButton clicked!")
+        switcher.switchTo(WordCheckAnswerFrame, self.genre, self.shuffle_list, self.count)
+
+
+
+
+class WordCheckAnswerFrame(tk.Frame):
+    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, shuffle_list: list, count: int):
+        super().__init__(switcher.parent)
+        self.genre = genre
+        self.model = model
+        self.switcher = switcher
+        self.shuffle_list = shuffle_list
+        self.count = count
+
+        self.plus_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
+        self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
+
+        self.plus_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
+        self.plus_button.place(relx=1.0, rely=1.0, anchor='se')
+
+    def on_back_button_click(self):
+        print("単語一覧Button clicked!")
+        switcher.switchTo(WordListFrame, self.genre)
+
+    def on_next_word_button_click(self,):
+        print("次の単語Button clicked!")
+        self.count += 1
+        switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
 
 
 window = tk.Tk()
@@ -222,5 +303,6 @@ switcher.switchTo(StartFrame)
 # switcher.switchTo(AddGenreFrame)
 # switcher.switchTo(WordListFrame)
 # switcher.switchTo(AddWordFrame)
+# switcher.switchTo(WordCheckFrame)
 
 window.mainloop()
