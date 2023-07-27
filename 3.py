@@ -2,8 +2,6 @@ import sqlite3
 import tkinter as tk
 from typing import Type
 import random
-import tkinter.messagebox as messagebox
-
 
 class Model:
     def __init__(self, db_name: str):
@@ -35,19 +33,6 @@ class Model:
         self.cursor.execute('''INSERT INTO genres (name) VALUES (?)''', (name,))
         self.connection.commit()
 
-    def edit_genre(self, id: int, genre_name: str):
-        self.cursor.execute('''
-        UPDATE genres
-        SET name=?
-        WHERE id=?
-        ''', (genre_name, id))
-        self.connection.commit()
-
-    def delete_genre(self, genre_id: int):
-        self.cursor.execute('''DELETE FROM words WHERE genre_id = ?''', (genre_id,))
-        self.cursor.execute('''DELETE FROM genres WHERE id = ?''', (genre_id,))
-        self.connection.commit()
-
     def get_genres(self):
         self.cursor.execute('''SELECT * FROM genres''')
         return self.cursor.fetchall()
@@ -56,40 +41,19 @@ class Model:
         self.cursor.execute('''INSERT INTO words (genre_id, word, details,confidence) VALUES (?, ?, ?, ?)''', (genre_id, word, details, confidence))
         self.connection.commit()
 
-    def edit_word(self, id:int, word: str, details: str):
-        self.cursor.execute('''
-        UPDATE words
-        SET word=?,details=?
-        WHERE id=?
-        ''', (word, details,id))
-        self.connection.commit()
-
-    def delete_word(self, word_id: int):
-        self.cursor.execute('''DELETE FROM words WHERE id = ?''', (word_id,))
-        self.connection.commit()
-
     def get_words(self, genre_id: int):
         self.cursor.execute('''SELECT * FROM words WHERE genre_id = ?''', (genre_id,))
         return self.cursor.fetchall()
 
-    def make_shuffle_list(self, word_list: list):
-        # self.cursor.execute('''SELECT id, word, details, confidence FROM words WHERE genre_id = ?''', (genre_id,))
-        # shuffle_list = self.cursor.fetchall()
-        shuffle_list = word_list
+    def make_shuffle_list(self, genre_id: int):
+        self.cursor.execute('''SELECT id, word, details, confidence FROM words WHERE genre_id = ?''', (genre_id,))
+        shuffle_list = self.cursor.fetchall()
         random.shuffle(shuffle_list)
         return shuffle_list
 
     def update_word_confidence(self, word_id: int, new_confidence: bool):
         self.cursor.execute('''UPDATE words SET confidence = ? WHERE id = ?''', (new_confidence, word_id))
         self.connection.commit()
-
-    def sort_confidence(self, genre_id: int):
-        self.cursor.execute('''SELECT * FROM words WHERE genre_id = ? AND confidence = ?''', (genre_id, True))
-        return self.cursor.fetchall()
-
-    def sort_no_confidence(self, genre_id: int):
-        self.cursor.execute('''SELECT * FROM words WHERE genre_id = ? AND confidence = ?''', (genre_id, False))
-        return self.cursor.fetchall()
 
 
 
@@ -114,7 +78,6 @@ class StartFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model):
         super().__init__(switcher.parent)
         self.switcher = switcher
-        self.model = model
 
         tk.Label(self, text="ジャンル").pack()
 
@@ -122,10 +85,7 @@ class StartFrame(tk.Frame):
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
 
         for genre in model.get_genres():
-            genre_button = tk.Button(self, text=genre[1])
-            genre_button.bind("<Button-1>", lambda event, g=genre: self.on_genre_button_click(event, g))
-            genre_button.bind("<Button-2>", lambda event, g=genre: self.on_genre_button_click(event, g))
-            genre_button.pack()
+            tk.Button(self, text=genre[1],command=lambda g=genre: self.on_genre_button_click(g)).pack()
 
         self.update()
 
@@ -133,14 +93,9 @@ class StartFrame(tk.Frame):
         print("plus Button clicked!")
         switcher.switchTo(AddGenreFrame)
 
-    def on_genre_button_click(self, event, genre: list):
-        word_list = self.model.get_words(genre[0])
-        if event.num == 1:
-            print("ジャンルButton left_clicked!")
-            switcher.switchTo(WordListFrame, genre, word_list)
-        elif event.num == 2:
-            print("ジャンルButton right_clicked!")
-            switcher.switchTo(GenreEditFrame, genre)
+    def on_genre_button_click(self, genre: list):
+        print("ジャンルButton clicked!")
+        switcher.switchTo(WordListFrame, genre)
 
 class AddGenreFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model):
@@ -175,12 +130,11 @@ class AddGenreFrame(tk.Frame):
 
 
 class WordListFrame(tk.Frame):
-    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list,word_list: list = None):
+    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list):
         super().__init__(switcher.parent)
         self.genre = genre
         self.model = model
         self.switcher = switcher
-        self.word_list = word_list
 
         tk.Label(self, text=genre[1]).pack(pady=(0,50))
 
@@ -196,20 +150,18 @@ class WordListFrame(tk.Frame):
 
 
         self.sort_all_button = tk.Button(self.sort_frame, text="全て", command=self.on_sort_all_button_click)
-
         self.sort_confidence_button = tk.Button(self.sort_frame, text="自信あり⚪︎", command=self.on_sort_confidence_button_click)
-
         self.sort_no_confidence_button = tk.Button(self.sort_frame, text="自信なし×", command=self.on_sort_no_confidence_button_click)
 
         self.sort_all_button.pack(side = 'left')
         self.sort_confidence_button.pack(side = 'left')
         self.sort_no_confidence_button.pack(side = 'left')
 
-        self.understand_check_button = tk.Button(self, text="理解度チェック", command=lambda w=self.word_list: self.on_understand_check_button_click(w))
+        self.understand_check_button = tk.Button(self, text="理解度チェック", command=self.on_understand_check_button_click)
         self.understand_check_button.place(relx=0, rely=1, anchor='sw')
 
 
-        for word in self.word_list:
+        for word in model.get_words(genre[0]):
             frame = tk.Frame(self)  # create a new frame for each button/checkbutton pair
             frame.pack()  # fill the frame in the x direction
 
@@ -236,30 +188,20 @@ class WordListFrame(tk.Frame):
 
     def on_sort_all_button_click(self):
         print("全てButton clicked!")
-        self.word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, self.word_list)
 
     def on_sort_confidence_button_click(self):
         print("自信ありButton clicked!")
-        # モデルで絞り込みする処理
-        self.word_list = self.model.sort_confidence(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, self.word_list)
-
 
     def on_sort_no_confidence_button_click(self):
         print("自信なしButton clicked!")
-        # モデルで絞り込みする処理
-        self.word_list = self.model.sort_no_confidence(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, self.word_list)
-
 
     def on_word_button_click(self, genre: list, word: list):
         print("単語Button clicked!")
         switcher.switchTo(WordDetailFrame, genre, word)
 
-    def on_understand_check_button_click(self,word_list):
+    def on_understand_check_button_click(self):
         print("理解度チェックButton clicked!")
-        shuffle_list = self.model.make_shuffle_list(word_list)
+        shuffle_list = self.model.make_shuffle_list(self.genre[0])
         switcher.switchTo(WordCheckFrame, self.genre, shuffle_list, 0)
 
     def on_confidence_change(self, word,confidence,*args):
@@ -301,16 +243,14 @@ class AddWordFrame(tk.Frame):
 
     def on_cancel_button_click(self):
         print("キャンセルbutton clicked!")
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre,word_list)
+        switcher.switchTo(WordListFrame, self.genre)
 
     def on_add_button_click(self):
         print("完了button clicked!")
         word_name = self.word_name_entry.get()
         word_detail = self.word_detail_entry.get()
         self.model.add_word(self.genre[0], word_name, word_detail)
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre,word_list)
+        switcher.switchTo(WordListFrame, self.genre)
 
 
 
@@ -341,16 +281,14 @@ class WordDetailFrame(tk.Frame):
         self.before_word  = tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w))
         self.before_word.place(relx=0.9, rely=1.0, anchor='se')
 
-        self.update()
 
     def on_wordlist_back_button_click(self):
         print("単語一覧button clicked!")
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
+        switcher.switchTo(WordListFrame, self.genre)
 
     def on_edit_button_click(self):
         print("編集button clicked!")
-        switcher.switchTo(WordEditFrame, self.genre,self.word)
+        switcher.switchTo(AddWordFrame, self.genre)
 
     def on_next_button_click(self,genre:list,word:list):
         print("次へbutton clicked!")
@@ -397,14 +335,13 @@ class WordCheckFrame(tk.Frame):
             self.answer_button.destroy()
             # 終了の表示
         else:
-            label = tk.Label(self,text=self.shuffle_list[self.count][2],font=("Helvetica",50))
+            label = tk.Label(self,text=self.shuffle_list[self.count][1],font=("Helvetica",50))
             label.place(relx=0.5, rely=0.5, anchor='center')
 
 
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
+        switcher.switchTo(WordListFrame, self.genre)
 
     def on_answer_button_click(self):
         print("答えButton clicked!")
@@ -428,10 +365,10 @@ class WordCheckAnswerFrame(tk.Frame):
         self.next_word_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
         self.next_word_button.place(relx=1.0, rely=1.0, anchor='se')
 
-        word_name = tk.Label(self,text=self.shuffle_list[self.count][2],font=("Helvetica",25))
+        word_name = tk.Label(self,text=self.shuffle_list[self.count][1],font=("Helvetica",25))
         word_name.place(relx=0.5, rely=0.2, anchor='center')
 
-        word_detail = tk.Label(self,text=self.shuffle_list[self.count][3],font=("Helvetica",50))
+        word_detail = tk.Label(self,text=self.shuffle_list[self.count][2],font=("Helvetica",50))
         word_detail.place(relx=0.5, rely=0.5, anchor='center')
 
 
@@ -443,14 +380,11 @@ class WordCheckAnswerFrame(tk.Frame):
         confidence_button = tk.Checkbutton(self, variable=confidence,onvalue=1, offvalue=0)
         confidence_button.place(relx=0.1, rely=1.0, anchor='sw')
 
-        self.update()
-
 
 
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
+        switcher.switchTo(WordListFrame, self.genre)
 
     def on_next_word_button_click(self):
         print("次の単語Button clicked!")
@@ -467,101 +401,6 @@ class WordCheckAnswerFrame(tk.Frame):
             self.on_confidence_change(word, confidence)
         return handler
 
-
-class WordEditFrame(tk.Frame):
-    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, word: list):  # 追加: model: Model
-        super().__init__(switcher.parent)
-        self.model= model
-        self.genre = genre
-        self.word = word
-
-        self.center_frame = tk.Frame(self)
-        self.center_frame.place(relx=0.5, rely=0.5, anchor='center')
-
-        tk.Label(self.center_frame, text="単語名").grid(row=0, column=0, columnspan=2, pady=5)
-        self.word_name_entry = tk.Entry(self.center_frame)
-        self.word_name_entry.insert(tk.END,word[2])
-        self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
-
-        tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.word_detail_entry = tk.Entry(self.center_frame)
-        self.word_detail_entry.insert(tk.END,word[3])
-        self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
-
-        self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_edit_button_click)
-        self.add_button.grid(row=4, column=1, pady=5)
-
-        self.cancel_button = tk.Button(self.center_frame, text="キャンセル", command=self.on_cancel_button_click)
-        self.cancel_button.grid(row=4, column=0, pady=5)
-
-        self.delete_button = tk.Button(self, text="削除", command=self.on_delete_button_click)
-        self.delete_button.place(relx=1.0, rely=0.0, anchor='ne')
-
-        self.update()
-
-
-    def on_cancel_button_click(self):
-        print("キャンセルbutton clicked!")
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
-
-    def on_edit_button_click(self):
-        print("edit完了button clicked!")
-        word_name = self.word_name_entry.get()
-        word_detail = self.word_detail_entry.get()
-        self.model.edit_word(self.word[0], word_name, word_detail)
-        word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
-
-    def on_delete_button_click(self):
-        print("削除button clicked!")
-        result = messagebox.askyesno("削除確認", f"本当にこの単語({self.word[2]})を削除しますか？")
-        if result:
-            self.model.delete_word(self.word[0])
-            word_list = self.model.get_words(self.genre[0])
-            switcher.switchTo(WordListFrame, self.genre, word_list)
-
-
-class GenreEditFrame(tk.Frame):
-    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list):
-        super().__init__(switcher.parent)
-        self.model = model
-        self.genre = genre
-
-        # This frame will be used to center the widgets
-        self.center_frame = tk.Frame(self)
-        self.center_frame.place(relx=0.5, rely=0.5, anchor='center')
-
-        tk.Label(self.center_frame, text="追加するジャンル名").grid(row=0, column=0, columnspan=2, pady=5)
-        self.genre_name_entry = tk.Entry(self.center_frame)
-        self.genre_name_entry.insert(tk.END, genre[1])
-        self.genre_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
-
-        self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_genre_button_click)
-        self.add_button.grid(row=2, column=1, pady=5)
-
-        self.cancel_button = tk.Button(self.center_frame, text="キャンセル", command=self.on_cancel_button_click)
-        self.cancel_button.grid(row=2, column=0, pady=5)
-        self.update()
-
-        self.delete_button = tk.Button(self, text="削除", command=self.on_delete_button_click)
-        self.delete_button.place(relx=1.0, rely=0.0, anchor='ne')
-
-    def on_cancel_button_click(self):
-        print("キャンセルbutton clicked!")
-        switcher.switchTo(StartFrame)
-
-    def on_add_genre_button_click(self):
-        print("完了button clicked!")
-        genre_name = self.genre_name_entry.get()
-        self.model.edit_genre(self.genre[0], genre_name)
-        switcher.switchTo(StartFrame)
-
-    def on_delete_button_click(self):
-        print("削除button clicked!")
-        if messagebox.askyesno('確認', f'{self.genre[1]}を削除してもよろしいですか？'):
-            self.model.delete_genre(self.genre[0])
-            switcher.switchTo(StartFrame)
 
 
 window = tk.Tk()
