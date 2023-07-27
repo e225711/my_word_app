@@ -41,6 +41,15 @@ class Model:
         self.cursor.execute('''INSERT INTO words (genre_id, word, details,confidence) VALUES (?, ?, ?, ?)''', (genre_id, word, details, confidence))
         self.connection.commit()
 
+    
+    def edit_genre(self, id: int, genre_name: str):
+        self.cursor.execute('''
+        UPDATE genres
+        SET name=?
+        WHERE id=?
+        ''', (genre_name, id))
+        self.connection.commit()
+
     def edit_word(self, id:int, word: str, details: str):
         self.cursor.execute('''
         UPDATE words
@@ -110,7 +119,8 @@ class StartFrame(tk.Frame):
             switcher.switchTo(WordListFrame, genre)
         elif event.num == 2:
             print("ジャンルButton right_clicked!")
-            switcher.switchTo(WordListFrame, genre)
+            switcher.switchTo(GenreEditFrame, genre)
+
 
 class AddGenreFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model):
@@ -140,7 +150,6 @@ class AddGenreFrame(tk.Frame):
         print("完了button clicked!")
         genre_name = self.genre_name_entry.get()
         self.model.add_genre(genre_name)
-
         switcher.switchTo(StartFrame)
 
 
@@ -415,7 +424,41 @@ class WordCheckAnswerFrame(tk.Frame):
         def handler(*args):
             self.on_confidence_change(word, confidence)
         return handler
-    
+
+
+class GenreEditFrame(tk.Frame):
+    def __init__(self, switcher: FrameSwitcher, model: Model, genre: list):
+        super().__init__(switcher.parent)
+        self.model = model
+        self.genre = genre
+
+        # This frame will be used to center the widgets
+        self.center_frame = tk.Frame(self)
+        self.center_frame.place(relx=0.5, rely=0.5, anchor='center')
+
+        tk.Label(self.center_frame, text="追加するジャンル名").grid(row=0, column=0, columnspan=2, pady=5)
+        self.genre_name_entry = tk.Entry(self.center_frame)
+        self.genre_name_entry.insert(tk.END, genre[1])
+        self.genre_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
+
+        self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_genre_button_click)
+        self.add_button.grid(row=2, column=1, pady=5)
+
+        self.cancel_button = tk.Button(self.center_frame, text="キャンセル", command=self.on_cancel_button_click)
+        self.cancel_button.grid(row=2, column=0, pady=5)
+        self.update()
+
+    def on_cancel_button_click(self):
+        print("キャンセルbutton clicked!")
+        switcher.switchTo(StartFrame)
+
+    def on_add_genre_button_click(self):
+        print("完了button clicked!")
+        genre_name = self.genre_name_entry.get()
+        self.model.edit_genre(self.genre[0], genre_name)
+        switcher.switchTo(StartFrame)
+
+
 
 class WordEditFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, word: list):  # 追加: model: Model
@@ -475,3 +518,9 @@ switcher.switchTo(StartFrame)
 # switcher.switchTo(AddWordFrame)
 
 window.mainloop()
+
+
+
+# Modelクラス edit_genre関数追加
+# StartFrameクラス on_genre_button_click関数 の　elifの中身編集
+# GenreEditFrameクラス　追加
