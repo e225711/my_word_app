@@ -23,6 +23,7 @@ class Model:
                 genre_id INTEGER,
                 word TEXT,
                 details TEXT,
+                confidence BOOLEAN,
                 FOREIGN KEY(genre_id) REFERENCES genres(id)
             )
         ''')
@@ -36,8 +37,8 @@ class Model:
         self.cursor.execute('''SELECT * FROM genres''')
         return self.cursor.fetchall()
 
-    def add_word(self, genre_id: int, word: str, details: str):
-        self.cursor.execute('''INSERT INTO words (genre_id, word, details) VALUES (?, ?, ?)''', (genre_id, word, details))
+    def add_word(self, genre_id: int, word: str, details: str,confidence: bool = False):
+        self.cursor.execute('''INSERT INTO words (genre_id, word, details,confidence) VALUES (?, ?, ?, ?)''', (genre_id, word, details, confidence))
         self.connection.commit()
 
     def edit_word(self, id:int, word: str, details: str):
@@ -51,12 +52,17 @@ class Model:
     def get_words(self, genre_id: int):
         self.cursor.execute('''SELECT * FROM words WHERE genre_id = ?''', (genre_id,))
         return self.cursor.fetchall()
-    
+
     def make_shuffle_list(self, genre_id: int):
-        self.cursor.execute('''SELECT id, word, details FROM words WHERE genre_id = ?''', (genre_id,))
+        self.cursor.execute('''SELECT id, word, details, confidence FROM words WHERE genre_id = ?''', (genre_id,))
         shuffle_list = self.cursor.fetchall()
         random.shuffle(shuffle_list)
         return shuffle_list
+
+    def update_word_confidence(self, word_id: int, new_confidence: bool):
+        self.cursor.execute('''UPDATE words SET confidence = ? WHERE id = ?''', (new_confidence, word_id))
+        self.connection.commit()
+
 
 
 
@@ -87,7 +93,10 @@ class StartFrame(tk.Frame):
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
 
         for genre in model.get_genres():
-            tk.Button(self, text=genre[1],command=lambda g=genre: self.on_genre_button_click(g)).pack()
+            genre_button = tk.Button(self, text=genre[1])
+            genre_button.bind("<Button-1>", lambda event, g=genre: self.on_genre_button_click(event, g))
+            genre_button.bind("<Button-2>", lambda event, g=genre: self.on_genre_button_click(event, g))
+            genre_button.pack()
 
         self.update()
 
@@ -95,9 +104,13 @@ class StartFrame(tk.Frame):
         print("plus Button clicked!")
         switcher.switchTo(AddGenreFrame)
 
-    def on_genre_button_click(self, genre: list):
-        print("ジャンルButton clicked!")
-        switcher.switchTo(WordListFrame, genre)
+    def on_genre_button_click(self, event, genre: list):
+        if event.num == 1:
+            print("ジャンルButton left_clicked!")
+            switcher.switchTo(WordListFrame, genre)
+        elif event.num == 2:
+            print("ジャンルButton right_clicked!")
+            switcher.switchTo(WordListFrame, genre)
 
 class AddGenreFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model):
@@ -138,7 +151,7 @@ class WordListFrame(tk.Frame):
         self.model = model
         self.switcher = switcher
 
-        tk.Label(self, text=genre[1]).pack()
+        tk.Label(self, text=genre[1]).pack(pady=(0,50))
 
         self.plus_button = tk.Button(self, text="＋", command=self.on_plus_button_click)
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
@@ -155,17 +168,27 @@ class WordListFrame(tk.Frame):
         self.sort_confidence_button = tk.Button(self.sort_frame, text="自信あり⚪︎", command=self.on_sort_confidence_button_click)
         self.sort_no_confidence_button = tk.Button(self.sort_frame, text="自信なし×", command=self.on_sort_no_confidence_button_click)
 
-        self.sort_all_button.grid(row=1, column=0, padx=5)
-        self.sort_confidence_button.grid(row=1, column=1, padx=5)
-        self.sort_no_confidence_button.grid(row=1, column=2, padx=5)
+        self.sort_all_button.pack(side = 'left')
+        self.sort_confidence_button.pack(side = 'left')
+        self.sort_no_confidence_button.pack(side = 'left')
 
         self.understand_check_button = tk.Button(self, text="理解度チェック", command=self.on_understand_check_button_click)
         self.understand_check_button.place(relx=0, rely=1, anchor='sw')
-      
 
-        
+
         for word in model.get_words(genre[0]):
-            tk.Button(self, text=word[2],command=lambda g = genre, w=word: self.on_word_button_click(g, w)).pack(expand=True)
+            frame = tk.Frame(self)  # create a new frame for each button/checkbutton pair
+            frame.pack()  # fill the frame in the x direction
+
+            tk.Button(frame, text=word[2],command=lambda g = genre, w=word: self.on_word_button_click(g, w)).pack(expand=True, side = 'left')
+
+            confidence = tk.IntVar()
+            confidence.set(word[4])
+            handler = self.make_confidence_change_handler(word, confidence)
+            confidence.trace('w', handler)
+            confidence_button = tk.Checkbutton(frame, variable=confidence,onvalue=1, offvalue=0)
+            confidence_button.pack(side = 'left')
+
 
         self.update()
 
@@ -196,6 +219,15 @@ class WordListFrame(tk.Frame):
         shuffle_list = self.model.make_shuffle_list(self.genre[0])
         switcher.switchTo(WordCheckFrame, self.genre, shuffle_list, 0)
 
+    def on_confidence_change(self, word,confidence,*args):
+        print("自信属性 Button clicked!")
+        # 自信属性を変更する処理
+        self.model.update_word_confidence(word[0], confidence.get())
+
+    def make_confidence_change_handler(self, word, confidence):
+        def handler(*args):
+            self.on_confidence_change(word, confidence)
+        return handler
 
 
 class AddWordFrame(tk.Frame):
@@ -234,7 +266,7 @@ class AddWordFrame(tk.Frame):
         word_detail = self.word_detail_entry.get()
         self.model.add_word(self.genre[0], word_name, word_detail)
         switcher.switchTo(WordListFrame, self.genre)
-        # データベースに関する処理
+
 
 
 class WordDetailFrame(tk.Frame):
@@ -264,7 +296,7 @@ class WordDetailFrame(tk.Frame):
         self.before_word  = tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w))
         self.before_word.place(relx=0.9, rely=1.0, anchor='se')
 
-    
+
     def on_wordlist_back_button_click(self):
         print("単語一覧button clicked!")
         switcher.switchTo(WordListFrame, self.genre)
@@ -354,6 +386,17 @@ class WordCheckAnswerFrame(tk.Frame):
         word_detail = tk.Label(self,text=self.shuffle_list[self.count][2],font=("Helvetica",50))
         word_detail.place(relx=0.5, rely=0.5, anchor='center')
 
+
+        tk.Label(self, text="自信").place(relx=0.0, rely=1.0, anchor='sw')
+        confidence = tk.IntVar()
+        confidence.set(self.shuffle_list[self.count][3])
+        handler = self.make_confidence_change_handler(self.shuffle_list[self.count], confidence)
+        confidence.trace('w', handler)
+        confidence_button = tk.Checkbutton(self, variable=confidence,onvalue=1, offvalue=0)
+        confidence_button.place(relx=0.1, rely=1.0, anchor='sw')
+
+
+
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
         switcher.switchTo(WordListFrame, self.genre)
@@ -363,7 +406,16 @@ class WordCheckAnswerFrame(tk.Frame):
         self.count += 1
         switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
 
+    def on_confidence_change(self, word,confidence,*args):
+        print("自信属性 Button clicked!")
+        # 自信属性を変更する処理
+        self.model.update_word_confidence(word[0], confidence.get())
 
+    def make_confidence_change_handler(self, word, confidence):
+        def handler(*args):
+            self.on_confidence_change(word, confidence)
+        return handler
+    
 
 class WordEditFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, word: list):  # 追加: model: Model
@@ -394,7 +446,6 @@ class WordEditFrame(tk.Frame):
         self.cancel_button.grid(row=4, column=0, pady=5)
 
         self.update()
-
         
 
     def on_cancel_button_click(self):
@@ -422,6 +473,5 @@ switcher.switchTo(StartFrame)
 # switcher.switchTo(AddGenreFrame)
 # switcher.switchTo(WordListFrame)
 # switcher.switchTo(AddWordFrame)
-#
 
 window.mainloop()
