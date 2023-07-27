@@ -49,7 +49,7 @@ class Model:
         return self.cursor.fetchall()
 
     def make_shuffle_list(self, genre_id: int):
-        self.cursor.execute('''SELECT id, word FROM words WHERE genre_id = ?''', (genre_id,))
+        self.cursor.execute('''SELECT id, word, details FROM words WHERE genre_id = ?''', (genre_id,))
         shuffle_list = self.cursor.fetchall()
         random.shuffle(shuffle_list)
         return shuffle_list
@@ -242,17 +242,21 @@ class WordCheckFrame(tk.Frame):
         self.shuffle_list = shuffle_list
         self.count = count
 
-        self.plus_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
-        self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
+        self.next_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
+        self.next_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        self.plus_button = tk.Button(self, text="解答へ", command=self.on_answer_button_click)
-        self.plus_button.place(relx=1.0, rely=1.0, anchor='se')
+        self.answer_button = tk.Button(self, text="解答へ", command=self.on_answer_button_click)
+        self.answer_button.place(relx=1.0, rely=1.0, anchor='se')
 
         if self.count == len(self.shuffle_list):
-            self.count = 0
-            # 終了の表示
+            label = tk.Label(self, text="終了です",font=("Helvetica", 50))
+            label.place(relx=0.5, rely=0.5, anchor='center')
+            self.answer_button.destroy()
+
         else:
-            tk.Label(self, text=self.shuffle_list[self.count][1]).pack()
+            label = tk.Label(self, text=self.shuffle_list[self.count][1],font=("Helvetica", 50))
+            label.place(relx=0.5, rely=0.5, anchor='center')
+
 
 
     def on_back_button_click(self):
@@ -281,11 +285,17 @@ class WordCheckAnswerFrame(tk.Frame):
         self.plus_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
         self.plus_button.place(relx=1.0, rely=1.0, anchor='se')
 
+        word_name = tk.Label(self, text=self.shuffle_list[self.count][1],font=("Helvetica", 20))
+        word_name.place(relx=0.5, rely=0.2, anchor='center')
+
+        word_detail = tk.Label(self, text=self.shuffle_list[self.count][2],font=("Helvetica", 50))
+        word_detail.place(relx=0.5, rely=0.5, anchor='center')
+
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
         switcher.switchTo(WordListFrame, self.genre)
 
-    def on_next_word_button_click(self,):
+    def on_next_word_button_click(self):
         print("次の単語Button clicked!")
         self.count += 1
         switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
