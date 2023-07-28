@@ -1,5 +1,6 @@
 import sqlite3
 import tkinter as tk
+from tkinter.scrolledtext import ScrolledText
 from typing import Type
 import random
 import tkinter.messagebox as messagebox
@@ -288,7 +289,7 @@ class AddWordFrame(tk.Frame):
         self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
         tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.word_detail_entry = tk.Entry(self.center_frame)
+        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=5, width=30)
         self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
         self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_button_click)
@@ -307,7 +308,7 @@ class AddWordFrame(tk.Frame):
     def on_add_button_click(self):
         print("完了button clicked!")
         word_name = self.word_name_entry.get()
-        word_detail = self.word_detail_entry.get()
+        word_detail = self.word_detail_entry.get('1.0','end - 1c')
         self.model.add_word(self.genre[0], word_name, word_detail)
         word_list = self.model.get_words(self.genre[0])
         switcher.switchTo(WordListFrame, self.genre,word_list)
@@ -330,10 +331,10 @@ class WordDetailFrame(tk.Frame):
         word_detail.place(relx=0.5, rely=0.5, anchor='center')
 
         self.back_button = tk.Button(self, text="単語一覧へ",command=self.on_wordlist_back_button_click)
-        self.back_button.place(relx=1.0, rely=0.0, anchor='ne')
+        self.back_button.place(relx=0.0, rely=0.0, anchor='nw')
 
         self.edit_button = tk.Button(self, text="編集", command=self.on_edit_button_click)
-        self.edit_button.place(relx=0.0, rely=0.0, anchor='nw')
+        self.edit_button.place(relx=1.0, rely=0.0, anchor='ne')
 
         self.next_word = tk.Button(self, text="次へ", command=lambda g = genre, w=word: self.on_next_button_click(g, w))
         self.next_word.place(relx=1.0, rely=1.0, anchor='se')
@@ -434,14 +435,15 @@ class WordCheckAnswerFrame(tk.Frame):
         word_detail = tk.Label(self,text=self.shuffle_list[self.count][3],font=("Helvetica",50))
         word_detail.place(relx=0.5, rely=0.5, anchor='center')
 
-
-        tk.Label(self, text="自信").place(relx=0.0, rely=1.0, anchor='sw')
+        confidence_frame = tk.Frame(self)
+        tk.Label(confidence_frame, text="自信").pack(side="left")
         confidence = tk.IntVar()
         confidence.set(self.shuffle_list[self.count][3])
         handler = self.make_confidence_change_handler(self.shuffle_list[self.count], confidence)
         confidence.trace('w', handler)
-        confidence_button = tk.Checkbutton(self, variable=confidence,onvalue=1, offvalue=0)
-        confidence_button.place(relx=0.1, rely=1.0, anchor='sw')
+        confidence_button = tk.Checkbutton(confidence_frame, variable=confidence,onvalue=1, offvalue=0)
+        confidence_button.pack(side="left")
+        confidence_frame.place(relx=0.05, rely=1.0, anchor='sw')
 
         self.update()
 
@@ -484,7 +486,7 @@ class WordEditFrame(tk.Frame):
         self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
         tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.word_detail_entry = tk.Entry(self.center_frame)
+        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=5, width=30)
         self.word_detail_entry.insert(tk.END,word[3])
         self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
@@ -508,7 +510,7 @@ class WordEditFrame(tk.Frame):
     def on_edit_button_click(self):
         print("edit完了button clicked!")
         word_name = self.word_name_entry.get()
-        word_detail = self.word_detail_entry.get()
+        word_detail = self.word_detail_entry.get('1.0','end - 1c')
         self.model.edit_word(self.word[0], word_name, word_detail)
         word_list = self.model.get_words(self.genre[0])
         switcher.switchTo(WordListFrame, self.genre, word_list)
