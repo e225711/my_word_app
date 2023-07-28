@@ -289,7 +289,7 @@ class AddWordFrame(tk.Frame):
         self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
         tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=5, width=30)
+        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=10, width=30)
         self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
         self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_button_click)
@@ -323,12 +323,32 @@ class WordDetailFrame(tk.Frame):
         self.word = word
 
         word_name = tk.Label(self,text=word[2],font=("Helvetica",25))
-        word_name.place(relx=0.5, rely=0.2, anchor='center')
+        word_name.place(relx=0.5, rely=0.15, anchor='center')
 
         tk.Label(self,text="詳細").pack()
 
-        word_detail = tk.Label(self,text=word[3],font=("Helvetica",20))
-        word_detail.place(relx=0.5, rely=0.5, anchor='center')
+        # word_detail = tk.Label(self,text=word[3],font=("Helvetica",20))
+        # word_detail.place(relx=0.5, rely=0.5, anchor='center')
+
+        
+        word_detail_frame = tk.Frame(self)
+        word_detail_frame.place(relx=0.5, rely=0.5, anchor='center')
+
+        # テキストウィジェットの横幅を指定して配置
+        word_detail = tk.Text(word_detail_frame, font=("Helvetica", 20), wrap='word', height=10, width=30)
+        word_detail.insert('1.0', word[3])
+        word_detail.pack(side='left', fill='both', expand=True)
+
+        scrollbar = tk.Scrollbar(word_detail_frame, command=word_detail.yview)
+        scrollbar.pack(side='right', fill='y')
+
+        # テキストウィジェットの編集を無効化
+        word_detail.config(state='disabled')
+
+        # テキストウィジェットとスクロールバーの連携
+        word_detail.config(yscrollcommand=scrollbar.set)
+
+
 
         self.back_button = tk.Button(self, text="単語一覧へ",command=self.on_wordlist_back_button_click)
         self.back_button.place(relx=0.0, rely=0.0, anchor='nw')
@@ -412,8 +432,6 @@ class WordCheckFrame(tk.Frame):
         switcher.switchTo(WordCheckAnswerFrame, self.genre, self.shuffle_list, self.count)
 
 
-
-
 class WordCheckAnswerFrame(tk.Frame):
     def __init__(self, switcher: FrameSwitcher, model: Model, genre: list, shuffle_list: list, count: int):
         super().__init__(switcher.parent)
@@ -429,25 +447,34 @@ class WordCheckAnswerFrame(tk.Frame):
         self.next_word_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
         self.next_word_button.place(relx=1.0, rely=1.0, anchor='se')
 
-        word_name = tk.Label(self,text=self.shuffle_list[self.count][2],font=("Helvetica",25))
+        word_name = tk.Label(self, text=self.shuffle_list[self.count][2], font=("Helvetica", 25))
         word_name.place(relx=0.5, rely=0.2, anchor='center')
 
-        word_detail = tk.Label(self,text=self.shuffle_list[self.count][3],font=("Helvetica",50))
-        word_detail.place(relx=0.5, rely=0.5, anchor='center')
+        # テキストウィジェットを使用して単語の詳細を表示
+        word_detail_frame = tk.Frame(self)
+        word_detail_frame.place(relx=0.5, rely=0.5, anchor='center')
 
+        word_detail = tk.Text(word_detail_frame, font=("Helvetica", 20), wrap='word', height=10, width=30)
+        word_detail.insert('1.0', self.shuffle_list[self.count][3])
+        word_detail.pack(side='left', fill='both', expand=True)
+
+        scrollbar = tk.Scrollbar(word_detail_frame, command=word_detail.yview)
+        scrollbar.pack(side='right', fill='y')
+
+        word_detail.config(yscrollcommand=scrollbar.set)
+
+        # 自信属性のチェックボタン
         confidence_frame = tk.Frame(self)
         tk.Label(confidence_frame, text="自信").pack(side="left")
         confidence = tk.IntVar()
         confidence.set(self.shuffle_list[self.count][3])
         handler = self.make_confidence_change_handler(self.shuffle_list[self.count], confidence)
         confidence.trace('w', handler)
-        confidence_button = tk.Checkbutton(confidence_frame, variable=confidence,onvalue=1, offvalue=0)
+        confidence_button = tk.Checkbutton(confidence_frame, variable=confidence, onvalue=1, offvalue=0)
         confidence_button.pack(side="left")
         confidence_frame.place(relx=0.05, rely=1.0, anchor='sw')
 
         self.update()
-
-
 
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
@@ -459,7 +486,7 @@ class WordCheckAnswerFrame(tk.Frame):
         self.count += 1
         switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
 
-    def on_confidence_change(self, word,confidence,*args):
+    def on_confidence_change(self, word, confidence, *args):
         print("自信属性 Button clicked!")
         # 自信属性を変更する処理
         self.model.update_word_confidence(word[0], confidence.get())
@@ -486,7 +513,7 @@ class WordEditFrame(tk.Frame):
         self.word_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
         tk.Label(self.center_frame, text="単語の詳細").grid(row=2, column=0, columnspan=2, pady=5)
-        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=5, width=30)
+        self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=10, width=30)
         self.word_detail_entry.insert(tk.END,word[3])
         self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
