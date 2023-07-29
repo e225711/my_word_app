@@ -4,12 +4,12 @@ from app import Model
 
 class TestModel(unittest.TestCase):
     def setUp(self):
+
         # テスト用のデータベースを作成し、モデルを初期化する
         self.db_name = "test.db"
         self.model = Model(self.db_name)
         self.model.add_genre("Test Genre")
         self.model.add_word(1, "Test Word", "Test Details", False)
-
 
     def tearDown(self):
         # テスト後にデータベースを削除する
@@ -96,5 +96,5 @@ class TestModel(unittest.TestCase):
 
 
 
-    if __name__ == "__main__":
-        unittest.main()
+if __name__ == "__main__":
+    unittest.main()
