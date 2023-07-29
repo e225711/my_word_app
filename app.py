@@ -142,7 +142,7 @@ class StartFrame(tk.Frame):
         # "ジャンル"というラベルを作成
         tk.Label(self, text="ジャンル").pack()
 
-        # ＋ボタンを作成、クリック時にはon_plus_button_clickを実行
+        # ＋ボタンを作成
         self.plus_button = tk.Button(self, text="＋", command=self.on_plus_button_click)
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
 
@@ -194,11 +194,11 @@ class AddGenreFrame(tk.Frame):
         self.genre_name_entry = tk.Entry(self.center_frame)
         self.genre_name_entry.grid(row=1, column=0, columnspan=2, pady=5)
 
-        # "完了"ボタンを作成、クリック時にはon_add_genre_button_clickを実行
+        # "完了"ボタンを作成
         self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_genre_button_click)
         self.add_button.grid(row=2, column=1, pady=5)
 
-        # "キャンセル"ボタンを作成、クリック時にはon_cancel_button_clickを実行
+        # "キャンセル"ボタンを作成
         self.cancel_button = tk.Button(self.center_frame, text="キャンセル", command=self.on_cancel_button_click)
         self.cancel_button.grid(row=2, column=0, pady=5)
         self.update()
@@ -235,11 +235,11 @@ class WordListFrame(tk.Frame):
         # ジャンル名を表示するラベルを作成
         tk.Label(self, text=genre[1]).pack(pady=(0,50))
 
-        # "＋"ボタンを作成、クリック時にはon_plus_button_clickを実行
+        # "＋"ボタンを作成
         self.plus_button = tk.Button(self, text="＋", command=self.on_plus_button_click)
         self.plus_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        # "戻る"ボタンを作成、クリック時にはon_back_button_clickを実行
+        # "戻る"ボタンを作成
         self.back_button = tk.Button(self, text="戻る", command=self.on_back_button_click)
         self.back_button.place(relx=0.0, rely=0.0, anchor='nw')
 
@@ -257,7 +257,7 @@ class WordListFrame(tk.Frame):
         self.sort_confidence_button.pack(side = 'left')
         self.sort_no_confidence_button.pack(side = 'left')
 
-        # "理解度チェック"ボタンを作成、クリック時にはon_understand_check_button_clickを実行
+        # "理解度チェック"ボタンを作成
         self.understand_check_button = tk.Button(self, text="理解度チェック", command=lambda w=self.word_list: self.on_understand_check_button_click(w))
         self.understand_check_button.place(relx=0, rely=1, anchor='sw')
 
@@ -266,7 +266,7 @@ class WordListFrame(tk.Frame):
             frame = tk.Frame(self)  # 各ボタン/チェックボタンペアの新しいフレームを作成
             frame.pack()  # フレームをx方向に伸ばす
 
-            # 単語ボタンを作成、クリック時にはon_word_button_clickを実行
+            # 単語ボタンを作成
             tk.Button(frame, text=word[2], command=lambda g = genre, w=word: self.on_word_button_click(g, w)).pack(expand=True, side = 'left')
 
             # 自信度チェックボックスを作成
@@ -326,7 +326,7 @@ class WordListFrame(tk.Frame):
         print("理解度チェックButton clicked!")
         # 単語リストをシャッフル
         shuffle_list = self.model.make_shuffle_list(word_list)
-        # 単語チェック画面に切り替え
+        # 理解度チェック画面に切り替え
         self.switcher.switchTo(WordCheckFrame, self.genre, shuffle_list, 0)
 
     # 自信度チェックボタンがクリックされた時の処理
@@ -368,11 +368,11 @@ class AddWordFrame(tk.Frame):
         self.word_detail_entry = ScrolledText(self.center_frame, font=("", 15), height=10, width=30)
         self.word_detail_entry.grid(row=3, column=0, columnspan=2, pady=5)
 
-        # "完了"ボタンを作成、クリック時にはon_add_button_clickを実行
+        # "完了"ボタンを作成
         self.add_button = tk.Button(self.center_frame, text="完了", command=self.on_add_button_click)
         self.add_button.grid(row=4, column=1, pady=5)
 
-        # "キャンセル"ボタンを作成、クリック時にはon_cancel_button_clickを実行
+        # "キャンセル"ボタンを作成
         self.cancel_button = tk.Button(self.center_frame, text="キャンセル", command=self.on_cancel_button_click)
         self.cancel_button.grid(row=4, column=0, pady=5)
 
@@ -437,19 +437,19 @@ class WordDetailFrame(tk.Frame):
         # テキストウィジェットとスクロールバーを連携させる
         word_detail.config(yscrollcommand=scrollbar.set)
 
-        # "単語一覧へ"ボタンを作成、クリック時にはon_wordlist_back_button_clickを実行
+        # "単語一覧へ"ボタンを作成
         self.back_button = tk.Button(self, text="単語一覧へ", command=self.on_wordlist_back_button_click)
         self.back_button.place(relx=0.0, rely=0.0, anchor='nw')
 
-        # "編集"ボタンを作成、クリック時にはon_edit_button_clickを実行
+        # "編集"ボタンを作成
         self.edit_button = tk.Button(self, text="編集", command=self.on_edit_button_click)
         self.edit_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        # "次へ"ボタンを作成、クリック時にはon_next_button_clickを実行
+        # "次へ"ボタンを作成
         self.next_word = tk.Button(self, text="次へ", command=lambda g = genre, w=word: self.on_next_button_click(g, w))
         self.next_word.place(relx=1.0, rely=1.0, anchor='se')
 
-        # "前へ"ボタンを作成、クリック時にはon_before_button_clickを実行
+        # "前へ"ボタンを作成
         self.before_word  = tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w))
         self.before_word.place(relx=0.88, rely=1.0, anchor='se')
 
@@ -481,9 +481,11 @@ class WordDetailFrame(tk.Frame):
         # 現在の単語が最後の単語だった場合、最初の単語を表示
         if word_index + 1 == len_search_word_list:
             word_index = 0
+            # 単語詳細画面に切り替え
             switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index])
         # それ以外の場合、次の単語を表示
         else:
+            # 単語詳細画面に切り替え
             switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index+1])
 
     # "前へ"ボタンがクリックされた時の処理
@@ -498,9 +500,11 @@ class WordDetailFrame(tk.Frame):
         # 現在の単語が最初の単語だった場合、最後の単語を表示
         if word_index == 0:
             word_index = len_search_word_list - 1
+            # 単語詳細画面に切り替え
             switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index])
         # それ以外の場合、前の単語を表示
         else:
+            # 単語詳細画面に切り替え
             switcher.switchTo(WordDetailFrame, genre, search_word_list[word_index-1])
 
 # 単語確認フレームを表現するクラス
@@ -515,11 +519,11 @@ class WordCheckFrame(tk.Frame):
         self.shuffle_list = shuffle_list
         self.count = count
 
-        # "単語一覧へ"ボタンを作成、クリック時にはon_back_button_clickを実行
+        # "単語一覧へ"ボタンを作成
         self.back_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
         self.back_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        # "解答へ"ボタンを作成、クリック時にはon_answer_button_clickを実行
+        # "解答へ"ボタンを作成
         self.answer_button = tk.Button(self, text="解答へ", command=self.on_answer_button_click)
         self.answer_button.place(relx=1.0, rely=1.0, anchor='se')
 
@@ -562,11 +566,11 @@ class WordCheckAnswerFrame(tk.Frame):
         self.shuffle_list = shuffle_list
         self.count = count
 
-        # "単語一覧へ"ボタンを作成、クリック時にはon_back_button_clickを実行
+        # "単語一覧へ"ボタンを作成
         self.back_button = tk.Button(self, text="単語一覧へ", command=self.on_back_button_click)
         self.back_button.place(relx=1.0, rely=0.0, anchor='ne')
 
-        # "次の単語へ"ボタンを作成、クリック時にはon_next_word_button_clickを実行
+        # "次の単語へ"ボタンを作成
         self.next_word_button = tk.Button(self, text="次の単語へ", command=self.on_next_word_button_click)
         self.next_word_button.place(relx=1.0, rely=1.0, anchor='se')
 
@@ -600,13 +604,15 @@ class WordCheckAnswerFrame(tk.Frame):
     def on_back_button_click(self):
         print("単語一覧Button clicked!")
         word_list = self.model.get_words(self.genre[0])
-        switcher.switchTo(WordListFrame, self.genre, word_list)
+        # 単語リスト画面に切り替え
+        self.switcher.switchTo(WordListFrame, self.genre, word_list)
 
     # "次の単語へ"ボタンがクリックされた時の処理
     def on_next_word_button_click(self):
         print("次の単語Button clicked!")
         self.count += 1
-        switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
+        # 理解度チェック画面に切り替え
+        self.switcher.switchTo(WordCheckFrame, self.genre, self.shuffle_list, self.count)
 
     # 自信度のチェックボックスが変更された時の処理
     def on_confidence_change(self, word, confidence, *args):
@@ -661,6 +667,7 @@ class WordEditFrame(tk.Frame):
     def on_cancel_button_click(self):
         print("キャンセルbutton clicked!")
         word_list = self.model.get_words(self.genre[0])
+        # 単語リスト画面に切り替え
         switcher.switchTo(WordListFrame, self.genre, word_list)
 
     # "完了"ボタンがクリックされた時の処理
@@ -671,6 +678,7 @@ class WordEditFrame(tk.Frame):
         # 単語の編集を行い、その後単語リストフレームに戻る
         self.model.edit_word(self.word[0], word_name, word_detail)
         word_list = self.model.get_words(self.genre[0])
+        # 単語リスト画面に切り替え
         switcher.switchTo(WordListFrame, self.genre, word_list)
 
     # "削除"ボタンがクリックされた時の処理
@@ -679,9 +687,10 @@ class WordEditFrame(tk.Frame):
         # ユーザーに削除確認のダイアログを表示
         result = messagebox.askyesno("削除確認", f"本当にこの単語({self.word[2]})を削除しますか？")
         if result:
-            # 確認が取れた場合は、単語を削除し、その後単語リストフレームに戻る
+            # はいを押した場合は、単語を削除し、その後単語リストフレームに戻る
             self.model.delete_word(self.word[0])
             word_list = self.model.get_words(self.genre[0])
+            # 単語リスト画面に切り替え
             switcher.switchTo(WordListFrame, self.genre, word_list)
 
 
@@ -719,6 +728,7 @@ class GenreEditFrame(tk.Frame):
     # "キャンセル"ボタンがクリックされた時の処理
     def on_cancel_button_click(self):
         print("キャンセルbutton clicked!")
+        # スタート画面に切り替え
         switcher.switchTo(StartFrame)
 
     # "完了"ボタンがクリックされた時の処理
@@ -727,6 +737,7 @@ class GenreEditFrame(tk.Frame):
         genre_name = self.genre_name_entry.get()
         # ジャンルの編集を行い、その後スタートフレームに戻る
         self.model.edit_genre(self.genre[0], genre_name)
+        # スタート画面に切り替え
         switcher.switchTo(StartFrame)
 
     # "削除"ボタンがクリックされた時の処理
@@ -734,33 +745,33 @@ class GenreEditFrame(tk.Frame):
         print("削除button clicked!")
         # ユーザーに削除確認のダイアログを表示
         if messagebox.askyesno('確認', f'{self.genre[1]}を削除してもよろしいですか？'):
-            # 確認が取れた場合は、ジャンルを削除し、その後スタートフレームに戻る
+            # はいを押した場合は、ジャンルを削除し、その後スタートフレームに戻る
             self.model.delete_genre(self.genre[0])
+            # スタート画面に切り替え
             switcher.switchTo(StartFrame)
 
 
 
-# Tkインスタンスを作成します。これはメインウィンドウです。
+# メインウィンドウを作成
 window = tk.Tk()
 
-# メインウィンドウのタイトルを設定します。
+# メインウィンドウのタイトルを設定
 window.title("My単語帳")
 
-# メインウィンドウの初期サイズを設定します。
+# メインウィンドウの初期サイズを設定
 window.geometry("500x500")
 
-# メインウィンドウのサイズ変更を無効にします。
+# メインウィンドウのサイズ変更を無効
 window.resizable(False, False)
 
-# データベースとのやり取りを管理するModelインスタンスを作成します。
+# データベースとのやり取りを管理するModelインスタンスを作成
 model = Model("test.db")
 
-# フレームを切り替えるためのスイッチャーを作成します。これにより、異なるフレーム間での移動が可能になります。
+# フレームを切り替えるためのスイッチャーを作成
 switcher = FrameSwitcher(window, model)
 
-# スタートフレーム（アプリケーションの最初の画面）に切り替えます。
+# スタートフレーム（アプリケーションの最初の画面）に切り替え
 switcher.switchTo(StartFrame)
 
-# アプリケーションのメインループを開始します。これによりアプリケーションはユーザーの操作を待ち受ける状態になります。
+# アプリケーションのメインループを開始
 window.mainloop()
-
