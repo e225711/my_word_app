@@ -735,7 +735,7 @@ class GenreEditFrame(tk.Frame):
     def on_add_genre_button_click(self):
         print("完了button clicked!")
         genre_name = self.genre_name_entry.get()
-        # ジャンルの編集を行い、その後スタートフレームに戻る
+        # ジャンルの編集を行い、その後スタート画面に戻る
         self.model.edit_genre(self.genre[0], genre_name)
         # スタート画面に切り替え
         switcher.switchTo(StartFrame)
@@ -745,7 +745,7 @@ class GenreEditFrame(tk.Frame):
         print("削除button clicked!")
         # ユーザーに削除確認のダイアログを表示
         if messagebox.askyesno('確認', f'{self.genre[1]}を削除してもよろしいですか？'):
-            # はいを押した場合は、ジャンルを削除し、その後スタートフレームに戻る
+            # はいを押した場合は、ジャンルを削除し、その後スタート画面に戻る
             self.model.delete_genre(self.genre[0])
             # スタート画面に切り替え
             switcher.switchTo(StartFrame)
@@ -770,7 +770,7 @@ model = Model("test.db")
 # フレームを切り替えるためのスイッチャーを作成
 switcher = FrameSwitcher(window, model)
 
-# スタートフレーム（アプリケーションの最初の画面）に切り替え
+# スタート画面切り替え
 switcher.switchTo(StartFrame)
 
 # アプリケーションのメインループを開始
