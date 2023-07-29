@@ -360,7 +360,7 @@ class WordDetailFrame(tk.Frame):
         self.next_word.place(relx=1.0, rely=1.0, anchor='se')
 
         self.before_word  = tk.Button(self, text="前へ", command=lambda g = genre, w=word: self.on_before_button_click(g, w))
-        self.before_word.place(relx=0.9, rely=1.0, anchor='se')
+        self.before_word.place(relx=0.88, rely=1.0, anchor='se')
 
         self.update()
 
@@ -463,16 +463,14 @@ class WordCheckAnswerFrame(tk.Frame):
 
         word_detail.config(yscrollcommand=scrollbar.set)
 
-        # 自信属性のチェックボタン
-        confidence_frame = tk.Frame(self)
-        tk.Label(confidence_frame, text="自信").pack(side="left")
+
+        tk.Label(self, text="自信").place(relx=0.02, rely=0.995, anchor='sw')
         confidence = tk.IntVar()
         confidence.set(self.shuffle_list[self.count][3])
         handler = self.make_confidence_change_handler(self.shuffle_list[self.count], confidence)
         confidence.trace('w', handler)
-        confidence_button = tk.Checkbutton(confidence_frame, variable=confidence, onvalue=1, offvalue=0)
-        confidence_button.pack(side="left")
-        confidence_frame.place(relx=0.05, rely=1.0, anchor='sw')
+        confidence_button = tk.Checkbutton(self, variable=confidence,onvalue=1, offvalue=0)
+        confidence_button.place(relx=0.08, rely=1.0, anchor='sw')
 
         self.update()
 
