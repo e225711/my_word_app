@@ -152,6 +152,7 @@ class StartFrame(tk.Frame):
             # 左クリックと右クリック時にはそれぞれ異なるイベントを発生させる
             genre_button.bind("<Button-1>", lambda event, g=genre: self.on_genre_button_click(event, g))
             genre_button.bind("<Button-2>", lambda event, g=genre: self.on_genre_button_click(event, g))
+            genre_button.bind("<Button-3>", lambda event, g=genre: self.on_genre_button_click(event, g))
             genre_button.pack()
 
         self.update()
@@ -170,7 +171,7 @@ class StartFrame(tk.Frame):
             print("ジャンルButton left_clicked!")
             # 左クリックの場合、単語リスト画面に切り替え
             self.switcher.switchTo(WordListFrame, genre, word_list)
-        elif event.num == 2:
+        elif event.num == 2 or event.num == 3:
             print("ジャンルButton right_clicked!")
             # 右クリックの場合、ジャンル編集画面に切り替え
             self.switcher.switchTo(GenreEditFrame, genre)
@@ -751,7 +752,6 @@ class GenreEditFrame(tk.Frame):
             switcher.switchTo(StartFrame)
 
 
-
 # メインウィンドウを作成
 window = tk.Tk()
 
@@ -765,7 +765,7 @@ window.geometry("500x500")
 window.resizable(False, False)
 
 # データベースとのやり取りを管理するModelインスタンスを作成
-model = Model("test.db")
+model = Model("my_word_app.db")
 
 # フレームを切り替えるためのスイッチャーを作成
 switcher = FrameSwitcher(window, model)
