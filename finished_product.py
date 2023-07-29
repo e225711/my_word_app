@@ -604,4 +604,5 @@ switcher.switchTo(StartFrame)
 # switcher.switchTo(WordListFrame)
 # switcher.switchTo(AddWordFrame)
 
+
 window.mainloop()
